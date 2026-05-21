@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TaskFlow – Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --border: #1e1e2e;
+      --accent: #7c6af7;
+      --accent-glow: rgba(124, 106, 247, 0.25);
+      --text: #e8e8f0;
+      --muted: #6b6b80;
+      --success: #4ade80;
+      --error: #f87171;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Ambient background blobs */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      pointer-events: none;
+    }
+    body::before {
+      width: 500px; height: 500px;
+      background: var(--accent);
+      top: -150px; left: -100px;
+    }
+    body::after {
+      width: 400px; height: 400px;
+      background: #a855f7;
+      bottom: -100px; right: -80px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      padding: 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .brand h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand p {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin-top: 6px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 0 40px rgba(0,0,0,0.4);
+    }
+
+    .tabs {
+      display: flex;
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 28px;
+      gap: 4px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .btn:hover { background: #6a59e0; box-shadow: 0 0 20px var(--accent-glow); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .message {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      display: none;
+    }
+    .message.success { background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74,222,128,0.3); color: var(--success); display: block; }
+    .message.error   { background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248,113,113,0.3); color: var(--error);   display: block; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="brand">
+      <h1>TaskFlow</h1>
+      <p>Your personal task command center</p>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+        <button class="tab-btn" onclick="switchTab('register')">Register</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="login-panel" class="panel active">
+        <div class="form-group">
+          <label>Username</label>
+          <input id="login-username" type="text" placeholder="your_username" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input id="login-password" type="password" placeholder="••••••••" />
+        </div>
+        <button class="btn" onclick="login()">Login →</button>
+        <div id="login-msg" class="message"></div>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="register-panel" class="panel">
+        <div class="form-group">
+          <label>Username</label>
+          <input id="reg-username" type="text" placeholder="your_username" />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input id="reg-email" type="email" placeholder="you@email.com" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input id="reg-password" type="password" placeholder="••••••••" />
+        </div>
+        <button class="btn" onclick="register()">Create Account →</button>
+        <div id="register-msg" class="message"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // If already logged in, go straight to tasks
+    if (localStorage.getItem('token')) window.location.href = '/tasks-ui';
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach((b, i) =>
+        b.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'))
+      );
+      document.getElementById('login-panel').classList.toggle('active', tab === 'login');
+      document.getElementById('register-panel').classList.toggle('active', tab === 'register');
+    }
+
+    function showMsg(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = `message ${type}`;
+    }
+
+    async function login() {
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+      if (!username || !password) return showMsg('login-msg', 'Please fill in all fields.', 'error');
+
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) return showMsg('login-msg', data.detail || 'Login failed.', 'error');
+
+        localStorage.setItem('token', data.access_token);
+        localStorage.setItem('username', username);
+        window.location.href = '/tasks-ui';
+      } catch {
+        showMsg('login-msg', 'Network error. Please try again.', 'error');
+      }
+    }
+
+    async function register() {
+      const username = document.getElementById('reg-username').value.trim();
+      const email    = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+      if (!username || !email || !password) return showMsg('register-msg', 'Please fill in all fields.', 'error');
+
+      try {
+        const res = await fetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) return showMsg('register-msg', data.detail || 'Registration failed.', 'error');
+
+        showMsg('register-msg', 'Account created! Please login.', 'success');
+        setTimeout(() => switchTab('login'), 1500);
+      } catch {
+        showMsg('register-msg', 'Network error. Please try again.', 'error');
+      }
+    }
+
+    // Allow Enter key to submit
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const active = document.querySelector('.panel.active').id;
+        active === 'login-panel' ? login() : register();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TaskFlow – Tasks</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1a1a24;
+      --border: #1e1e2e;
+      --accent: #7c6af7;
+      --accent-glow: rgba(124,106,247,0.2);
+      --text: #e8e8f0;
+      --muted: #6b6b80;
+      --success: #4ade80;
+      --error: #f87171;
+      --warning: #fbbf24;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* Navbar */
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-brand {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.2rem;
+      background: linear-gradient(135deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-user { font-size: 0.85rem; color: var(--muted); }
+    .btn-logout {
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover { border-color: var(--error); color: var(--error); }
+
+    /* Main layout */
+    .main { max-width: 800px; margin: 0 auto; padding: 32px 24px; }
+
+    /* Stats bar */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    /* Create task form */
+    .create-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .create-card h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+    .form-row { display: flex; gap: 10px; }
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      resize: none;
+    }
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .btn-primary {
+      padding: 11px 20px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.875rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover { background: #6a59e0; box-shadow: 0 0 16px var(--accent-glow); }
+
+    /* Filter bar */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .filter-btn {
+      padding: 6px 16px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* Task list */
+    #task-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .task-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      transition: border-color 0.2s;
+      animation: slideIn 0.2s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .task-card:hover { border-color: #2e2e42; }
+    .task-card.completed { opacity: 0.6; }
+    .task-card.completed .task-title { text-decoration: line-through; color: var(--muted); }
+
+    .check-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-top: 2px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .check-btn:hover { border-color: var(--success); }
+    .check-btn.done { background: var(--success); border-color: var(--success); }
+    .check-btn.done::after { content: '✓'; color: #000; font-size: 12px; font-weight: 700; }
+
+    .task-content { flex: 1; min-width: 0; }
+    .task-title { font-weight: 500; font-size: 0.95rem; margin-bottom: 2px; }
+    .task-desc { font-size: 0.82rem; color: var(--muted); margin-top: 4px; white-space: pre-wrap; }
+    .task-meta { font-size: 0.75rem; color: var(--muted); margin-top: 6px; }
+
+    .task-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .btn-delete {
+      padding: 5px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-delete:hover { border-color: var(--error); color: var(--error); }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .page-btn {
+      padding: 7px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .page-btn:not(:disabled):hover { border-color: var(--accent); color: var(--accent); }
+    .page-info { font-size: 0.82rem; color: var(--muted); }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+    }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty-state p { font-size: 0.9rem; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      z-index: 999;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: rgba(74,222,128,0.15); border: 1px solid rgba(74,222,128,0.4); color: var(--success); }
+    .toast.error   { background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.4); color: var(--error); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-brand">TaskFlow</span>
+  <div class="nav-right">
+    <span class="nav-user">👤 <span id="nav-username"></span></span>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="main">
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-num" id="stat-total">0</div>
+      <div class="stat-label">Total Tasks</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-pending" style="color: var(--warning)">0</div>
+      <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-done" style="color: var(--success)">0</div>
+      <div class="stat-label">Completed</div>
+    </div>
+  </div>
+
+  <!-- Create Task -->
+  <div class="create-card">
+    <h2>+ New Task</h2>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <input type="text" id="task-title" placeholder="Task title..." />
+      <div class="form-row">
+        <input type="text" id="task-desc" placeholder="Description (optional)..." style="flex:1"/>
+        <button class="btn-primary" onclick="createTask()">Add Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter -->
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setFilter(null, this)">All</button>
+    <button class="filter-btn" onclick="setFilter(false, this)">Pending</button>
+    <button class="filter-btn" onclick="setFilter(true, this)">Completed</button>
+  </div>
+
+  <!-- Task List -->
+  <div id="task-list"></div>
+
+  <!-- Pagination -->
+  <div class="pagination">
+    <button class="page-btn" id="prev-btn" onclick="changePage(-1)" disabled>← Prev</button>
+    <span class="page-info" id="page-info"></span>
+    <button class="page-btn" id="next-btn" onclick="changePage(1)" disabled>Next →</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = '';  // same origin
+  let token = localStorage.getItem('token');
+  let currentPage = 1;
+  let filterCompleted = null;
+  let totalPages = 1;
+
+  // Redirect if not logged in
+  if (!token) window.location.href = '/';
+  document.getElementById('nav-username').textContent = localStorage.getItem('username') || 'User';
+
+  function authHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+  }
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = '/';
+  }
+
+  function setFilter(val, btn) {
+    filterCompleted = val;
+    currentPage = 1;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadTasks();
+  }
+
+  function changePage(dir) {
+    currentPage += dir;
+    loadTasks();
+  }
+
+  async function loadTasks() {
+    let url = `/tasks?page=${currentPage}&page_size=5`;
+    if (filterCompleted !== null) url += `&completed=${filterCompleted}`;
+
+    try {
+      const res = await fetch(url, { headers: authHeaders() });
+      if (res.status === 401) return logout();
+      const data = await res.json();
+
+      renderTasks(data.tasks);
+      updateStats(data);
+
+      totalPages = Math.ceil(data.total / data.page_size) || 1;
+      document.getElementById('page-info').textContent = `Page ${data.page} of ${totalPages}`;
+      document.getElementById('prev-btn').disabled = data.page <= 1;
+      document.getElementById('next-btn').disabled = data.page >= totalPages;
+    } catch {
+      showToast('Failed to load tasks', 'error');
+    }
+  }
+
+  async function loadStats() {
+    // Load all tasks (no filter) just to get totals
+    const [allRes, doneRes] = await Promise.all([
+      fetch(`/tasks?page=1&page_size=1`, { headers: authHeaders() }),
+      fetch(`/tasks?page=1&page_size=1&completed=true`, { headers: authHeaders() }),
+    ]);
+    const all  = await allRes.json();
+    const done = await doneRes.json();
+    document.getElementById('stat-total').textContent   = all.total;
+    document.getElementById('stat-done').textContent    = done.total;
+    document.getElementById('stat-pending').textContent = all.total - done.total;
+  }
+
+  function updateStats(data) { loadStats(); }
+
+  function renderTasks(tasks) {
+    const list = document.getElementById('task-list');
+    if (!tasks.length) {
+      list.innerHTML = `<div class="empty-state"><div class="icon">✅</div><p>No tasks here. Create one above!</p></div>`;
+      return;
+    }
+
+    list.innerHTML = tasks.map(t => `
+      <div class="task-card ${t.completed ? 'completed' : ''}" id="task-${t.id}">
+        <button class="check-btn ${t.completed ? 'done' : ''}" onclick="toggleTask(${t.id}, ${t.completed})" title="Mark complete"></button>
+        <div class="task-content">
+          <div class="task-title">${escHtml(t.title)}</div>
+          ${t.description ? `<div class="task-desc">${escHtml(t.description)}</div>` : ''}
+          <div class="task-meta">${t.completed ? '✅ Completed' : '⏳ Pending'} · ${new Date(t.created_at).toLocaleDateString()}</div>
+        </div>
+        <div class="task-actions">
+          <button class="btn-delete" onclick="deleteTask(${t.id})">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  async function createTask() {
+    const title = document.getElementById('task-title').value.trim();
+    const description = document.getElementById('task-desc').value.trim();
+    if (!title) return showToast('Title is required', 'error');
+
+    const res = await fetch('/tasks', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ title, description: description || null }),
+    });
+    if (!res.ok) return showToast('Failed to create task', 'error');
+
+    document.getElementById('task-title').value = '';
+    document.getElementById('task-desc').value = '';
+    showToast('Task created!');
+    currentPage = 1;
+    loadTasks();
+  }
+
+  async function toggleTask(id, isCompleted) {
+    const res = await fetch(`/tasks/${id}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ completed: !isCompleted }),
+    });
+    if (!res.ok) return showToast('Failed to update task', 'error');
+    showToast(isCompleted ? 'Marked as pending' : 'Marked as complete!');
+    loadTasks();
+  }
+
+  async function deleteTask(id) {
+    if (!confirm('Delete this task?')) return;
+    const res = await fetch(`/tasks/${id}`, { method: 'DELETE', headers: authHeaders() });
+    if (!res.ok) return showToast('Failed to delete task', 'error');
+    showToast('Task deleted');
+    loadTasks();
+  }
+
+  // Initial load
+  loadTasks();
+  loadStats();
+
+  // Allow Enter in title field to create task
+  document.getElementById('task-title').addEventListener('keydown', e => {
+    if (e.key === 'Enter') createTask();
+  });
+</script>
+</body>
+</html>

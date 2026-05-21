@@ -2,7 +2,7 @@
 
 A full-stack task manager built with **FastAPI**, **PostgreSQL**, and vanilla **HTML/CSS/JS**.
 
-🔗 **Live Demo:** [your-app.onrender.com](https://your-app.onrender.com)  
+🔗 **Live Demo:** [task-manager-cbv3.onrender.com](https://task-manager-cbv3.onrender.com)
 📖 **API Docs:** [your-app.onrender.com/docs](https://your-app.onrender.com/docs)
 
 ---
